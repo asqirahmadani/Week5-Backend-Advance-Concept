@@ -1,0 +1,113 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>
+        <%= title || 'Real-time Chat Application' %>
+    </title>
+
+    <!-- Meta tags -->
+    <meta name="description" content="Real-time chat application with rooms and WebSocket support">
+    <meta name="author" content="Your Name">
+
+    <!-- CSS -->
+    <link rel="stylesheet" href="/static/css/style.css">
+
+    <!-- Add any additional CSS from controller -->
+    <% if (typeof additionalCSS !=='undefined' ) { %>
+        <% additionalCSS.forEach(function(css) { %>
+            <link rel="stylesheet" href="<%= css %>">
+            <% }); %>
+                <% } %>
+</head>
+
+<body>
+    <!-- Login Form -->
+    <div id="loginForm" class="login-form">
+        <h2>🚀 Join Chat Room</h2>
+        <div class="input-group">
+            <label for="username">Username</label>
+            <input type="text" id="username" placeholder="Enter your username" maxlength="20" autocomplete="username">
+        </div>
+        <button class="btn" id="loginBtn">Join Chat</button>
+        <div id="loginError" class="error" style="display: none;"></div>
+
+        <% if (typeof welcomeMessage !=='undefined' ) { %>
+            <div class="success">
+                <%= welcomeMessage %>
+            </div>
+            <% } %>
+    </div>
+
+    <!-- Main Chat Interface -->
+    <div id="chatContainer" class="container hidden">
+        <!-- Sidebar -->
+        <div class="sidebar">
+            <h2>💬 Chat Rooms</h2>
+            <div class="room-list" id="roomList">
+                <div class="loading"></div>
+            </div>
+
+            <div class="room-controls">
+                <div class="input-group">
+                    <input type="text" id="newRoomName" placeholder="Room name" maxlength="30">
+                </div>
+                <button class="btn" id="createRoomBtn">➕ Create Room</button>
+                <button class="btn danger" id="deleteRoomBtn">🗑️ Delete Room</button>
+                <button class="btn" id="logoutBtn">🚪 Logout</button>
+            </div>
+        </div>
+
+        <!-- Chat Area -->
+        <div class="chat-area">
+            <div class="chat-header">
+                <h3 id="currentRoomName">General</h3>
+                <div class="online-users">
+                    👥 Online: <span id="onlineCount">0</span> users
+                    <span id="connectionStatus" class="status offline">Offline</span>
+                </div>
+            </div>
+
+            <div class="messages" id="messages">
+                <!-- Messages will appear here -->
+            </div>
+
+            <div class="message-input">
+                <input type="text" id="messageInput" placeholder="Type your message..." maxlength="500"
+                    autocomplete="off">
+                <button class="send-btn" id="sendBtn">📤 Send</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Include configuration from server -->
+    <script>
+        window.APP_CONFIG = {
+            wsUrl: "<%= wsUrl || `ws://${process.env.NODE_ENV === 'production' ? 'your-domain.com' : 'localhost:3000'}/ws` %>",
+            apiUrl: "<%= apiUrl || '' %>",
+            maxMessageLength: '<%= maxMessageLength || 500 %>',
+            maxUsernameLength: '<%= maxUsernameLength || 20 %>',
+            maxRoomNameLength: '<%= maxRoomNameLength || 30 %>',
+            version: "<%= version || '1.0.0' %>"
+        };
+    </script>
+
+    <!-- Main JavaScript -->
+    <script src="/static/js/chat.js"></script>
+
+    <!-- Add any additional JS from controller -->
+    <% if (typeof additionalJS !=='undefined' ) { %>
+        <% additionalJS.forEach(function(js) { %>
+            <script src="<%= js %>"></script>
+            <% }); %>
+                <% } %>
+
+                    <!-- Analytics or other tracking scripts -->
+                    <% if (typeof analyticsId !=='undefined' ) { %>
+                        <!-- Add your analytics script here -->
+                        <% } %>
+</body>
+
+</html>

@@ -1,0 +1,1 @@
+ALTER TABLE "payments" DROP CONSTRAINT "payments_stripe_payment_intent_id_unique";

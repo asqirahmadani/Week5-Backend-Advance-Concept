@@ -1,0 +1,19 @@
+{
+    "dependencies": {
+        "dotenv": "latest",
+        "pm2": "latest"
+    },
+    "scripts": {
+        "install-all": "scripts\\install-dependencies.bat",
+        "install-all-unix": "./scripts/install-dependencies.sh",
+        "migrate": "scripts\\migrate-all.bat",
+        "migrate-all-unix": "./scripts/migrate-all.sh",
+        "start": "scripts\\start-services.bat",
+        "start-all-unix": "./scripts/start-services.sh",
+        "stop": "pm2 stop all",
+        "restart": "pm2 restart all",
+        "status": "pm2 status",
+        "logs": "pm2 logs",
+        "dev": "npm run migrate && npm run start"
+    }
+}

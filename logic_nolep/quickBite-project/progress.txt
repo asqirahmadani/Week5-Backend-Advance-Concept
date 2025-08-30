@@ -1,0 +1,110 @@
+Progress Services Done
+
+1. user-service (localhost:3001)
+	auth-route (/api/auth)
+		POST /register
+		POST /login
+		GET /profile			(auth)
+		GET /stripe-status		(auth)
+		POST /retry-stripe-account	(auth)
+		DELETE /logout			(auth)
+	
+	user-route (/api)
+		GET /			(get all users) (auth: admin)
+		PUT /profile 		(edit profile) 	(auth)
+		GET /users/:userId
+		GET /drivers/available	(get available drivers)
+		DELETE /users/:userId
+
+2. restaurant-service (localhost:3002)
+	restaurant-route (/api/restaurant)
+		GET /		(get all restaurants)
+		GET /:id
+		POST /		(create restaurants)	(auth: owner, admin)
+		PUT /:id	(update restaurants)	(auth: owner, admin)
+		DELETE /:id	(delete restaurant)	(auth: owner, admin)
+		GET /:id/menu	(get restaurant menu)
+		GET /owner/my-restaurants		(auth: owner)
+
+	menu-route (/api/menus)
+		GET /categories/:restaurantId
+		POST /categories		(auth: owner, admin)
+		POST /items			(auth: owner, admin)
+		PUT /items/:id			(auth: owner, admin)
+		DELETE /items/:id		(auth: owner, admin)
+
+3. order-service (localhost:3003)
+	order-route (/api/orders)
+		POST /				(create order)			(auth)
+		GET /my-orders			(get customer orders)		(auth)
+		GET /:orderId			(get order details)
+		GET /restaurant/:restaurantId	(get orders) 			(auth: owner)
+		PATCH /:orderId/status		(update status order) 		(auth)
+		GET /driver/available		(driver: get avail order)	(auth: driver)
+		POST /:orderId/accept		(driver: accept order)		(auth: driver)
+		PATCH /:orderId/cancel		(cancel order)			(auth)
+		GET /stats/:restaurantId	(get order statistics)		(auth)
+
+4. payment-service (localhost:3004)
+	payment-route (/api/payments)
+		POST /create		(create payment intent)
+		POST /confirm		(confirm payment)
+		GET /order/:orderId	(get payment by order id)
+		POST /driver-earning	(create driver earning)
+		POST /settlements	(create restaurant settlement)
+		POST /driver-earning/:earningId/payout	(process driver payout)
+		POST /settlements/:settlementId/payout	(process restaurant settlement)
+
+	refund-route (/api/refunds)
+		POST /create		(create refund)
+		GET /order/:orderId	(get refund by order id)
+		POST /auto-refund	(process automatic refund (internal endpoint))
+		GET /stats		(get refund statistics)
+
+	webhook (/webhooks)
+		POST /post		(stripe webhook endpoint)
+			case 'payment_intent_succeeded'
+			case 'payment_intent.payment_failed'
+			case 'payment_intent.canceled'
+			case 'charge.dispute.created'
+			case 'refund.created'
+			case 'refund.updated'
+			case 'transfer.created'
+			case 'transfer.updated'
+			case 'transfer.reversed'
+
+5. delivery-service (localhost:3005)
+	delivery-route (/api/deliveries)
+		POST /assign	(assign order to driver (online driver))
+		POST /:deliveryId/accept	(drivers accept delivery)	(auth)
+		PATCH /:deliveryId/status	(update delivery status)	(auth)
+		GET /order/:orderId		(get delivery by order id)
+		GET /my-deliveries		(get driver's deliveries)	(auth)
+		GET /:deliveryId/tracking	(get delivery tracking)
+
+6. review-service (localhost:3006)
+	review-route (/api/reviews)
+		POST /					(create review)			(auth: customer)
+		GET /restaurant/:restaurantId		(get restaurant reviews)
+		GET /restaurant/:restaurantId/stats	(get restaurant statistics)
+		GET /customer/my-reviews		(get customer reviews)		(auth)
+		GET /driver/:driverId			(get driver reviews)
+		GET /driver/:driverId/stats		(get driver statistics)
+		POST /:reviewId/response		(add review response)		(auth: owner, admin)
+		POST /:reviewId/helpful			(mark review as helpful)	(auth)
+		POST /:reviewId/report			(report review)			(auth)
+
+	admin-route (/api/admin/reviews)
+		GET /reports				(get reported reviews)		(auth: admin)
+		PATCH /reports/:reportId		(resolve review report)		(auth: admin)
+
+7. notification-service (localhost:3007)
+	notification-route (/api/notification)
+		POST /send	(send notification)
+		GET /history	(get user notification history)		(auth)
+		POST /process	(process pending notification)		(auth: admin)
+		POST /retry	(retry failed notifications)		(auth: admin)
+		GET /stats	(get notification statistics)		(auth: admin)
+	
+	template-route (/api/templates)
+		POST /		(create notification template)		(auth: admin)

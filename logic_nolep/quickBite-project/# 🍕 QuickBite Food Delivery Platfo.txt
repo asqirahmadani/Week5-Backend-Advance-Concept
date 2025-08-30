@@ -1,0 +1,394 @@
+# 🍕 QuickBite Food Delivery Platform
+
+## 📊 Entity Relationship Diagram (ERD)
+
+### 👥 **Users Service**
+```
+users
+├── id (UUID, PK)
+├── email (string, unique)
+├── password_hash (string)
+├── phone (string)
+├── full_name (string)
+├── role (enum: customer, driver, restaurant_owner, admin)
+├── status (enum: active, suspended, inactive)
+├── address (string)
+├── city (string)
+├── stripe_account_id (string)
+├── stripe_onboarding_completed (boolean)
+├── stripe_created_at (timestamp)
+├── created_at (timestamp)
+├── updated_at (timestamp)
+
+user_session
+├── id (UUID, PK)
+├── user_id (UUID, FK → users.id)
+├── device_hash (string)
+├── expires_at (timestamp)
+├── created_at (timestamp)
+```
+
+### 🏪 **Restaurant Service**
+```
+restaurants
+├── id (UUID, PK)
+├── owner_id (UUID, FK → users.id)
+├── name (string)
+├── description (text)
+├── cuisine_type (string)
+├── address (text)
+├── city (string)
+├── latitude (decimal)
+├── longitude (decimal)
+├── phone (string)
+├── email (string, unique)
+├── rating (decimal, default: 0)
+├── total_reviews (integer, default: 0)
+├── is_active (boolean, default: true)
+├── is_verified (boolean, default: false)
+├── delivery_fee (decimal)
+├── minimum_order (decimal)
+├── estimated_prep_time (integer, minutes)
+├── is_open(boolean)
+├── created_at (timestamp)
+├── updated_at (timestamp)
+
+menu_categories
+├── id (UUID, PK)
+├── restaurant_id (UUID, FK → restaurants.id)
+├── name (string)
+├── description (text)
+├── sort_order (integer)
+├── is_active (boolean)
+
+menu_items
+├── id (UUID, PK)
+├── restaurant_id (UUID, FK → restaurants.id)
+├── category_id (UUID, FK → menu_categories.id)
+├── name (string)
+├── description (text)
+├── price (decimal)
+├── is_available (boolean, default: true)
+├── preparation_time (integer, minutes)
+├── created_at (timestamp)
+├── updated_at (timestamp)
+
+```
+
+### 🛒 **Order Service**
+```
+orders
+├── id (UUID, PK)
+├── customer_id (UUID, FK → users.id)
+├── restaurant_id (UUID, FK → restaurants.id)
+├── driver_id (UUID, FK → users.id, nullable)
+├── order_number (string, unique)
+├── status (enum: pending, confirmed, preparing, ready, picked_up, delivered, cancelled, refunded)
+├── subtotal (decimal)
+├── delivery_fee (decimal)
+├── total_amount (decimal)
+├── payment_status (enum: pending, paid, refunded, failed)
+├── delivery_address (text)
+├── estimated_delivery_time (timestamp)
+├── actual_delivery_time (timestamp, nullable)
+├── created_at (timestamp)
+├── updated_at (timestamp)
+
+order_items
+├── id (UUID, PK)
+├── order_id (UUID, FK → orders.id)
+├── menu_item_id (UUID, FK → menu_items.id)
+├── menu_item_name (string, FK → menu_items.name)
+├── quantity (integer)
+├── unit_price (decimal)
+├── total_price (decimal)
+├── created_at (timestamp)
+
+order_status_history
+├── id (UUID, PK)
+├── order_id (UUID, FK → orders.id)
+├── status (string)
+├── changed_at (timestamp)
+├── notes (text)
+```
+
+### 💳 **Payment Service**
+```
+payments
+├── id (UUID, PK)
+├── order_id (UUID, FK → orders.id)
+├── user_id (UUID, FK → users.id)
+├── stripe_payment_intent_id (string, unique)
+├── amount (decimal)
+├── currency (string, default: 'USD')
+├── payment_method (enum: card, wallet, cash)
+├── status (enum: pending, processing, succeeded, failed, cancelled)
+├── fees (decimal, default: 0)
+├── metadata (text)
+├── created_at (timestamp)
+├── updated_at (timestamp)
+
+refunds
+├── id (UUID, PK)
+├── payment_id (UUID, FK → payments.id)
+├── order_id (UUID, FK → orders.id)
+├── stripe_refund_id (string, unique)
+├── amount (decimal)
+├── reason (enum: customer_request, restaurant_cancelled, driver_unavailable, food_quality, other)
+├── description (text)
+├── status (enum: pending, processing, succeeded, failed)
+├── requested_by (UUID, FK → users.id)
+├── processed_by (UUID, FK → users.id, nullable)
+├── requested_at (timestamp)
+├── processed_at (timestamp, nullable)
+
+driver_earnings
+├── id (UUID, PK)
+├── driver_id (UUID, FK → users.id)
+├── order_id (UUID, FK → orders.id)
+├── base_earning (decimal)
+├── tip_amount (decimal, default: 0)
+├── bonus_amount (decimal, default: 0)
+├── total_earning (decimal)
+├── payout_status (enum: pending, processing, paid)
+├── payout_date (timestamp, nullable)
+├── created_at (timestamp)
+
+restaurant_settlements
+├── id (UUID, PK)
+├── restaurant_id (UUID, FK → restaurants.id)
+├── order_id (UUID, FK → orders.id)
+├── gross_amount (decimal)
+├── commission_rate (decimal)
+├── commission_amount (decimal)
+├── net_amount (decimal)
+├── settlement_status (enum: pending, processing, paid)
+├── settlement_date (timestamp, nullable)
+├── created_at (timestamp)
+```
+
+### 🚚 **Delivery Service**
+```
+delivery_assignments
+├── id (UUID, PK)
+├── order_id (UUID, FK → orders.id)
+├── driver_id (UUID, FK → users.id)
+├── assigned_at (timestamp)
+├── accepted_at (timestamp, nullable)
+├── picked_up_at (timestamp, nullable)
+├── delivered_at (timestamp, nullable)
+├── status (enum: assigned, accepted, en_route_to_restaurant, arrived_at_restaurant, picked_up, en_route_to_customer, delivered, cancelled)
+
+delivery_tracking
+├── id (UUID, PK)
+├── delivery_id (UUID, FK → delivery_assignments.id)
+├── latitude (decimal)
+├── longitude (decimal)
+├── timestamp (timestamp)
+├── speed (decimal, nullable)
+├── heading (decimal, nullable)
+
+driver_locations
+├── driver_id (UUID, FK → users.id, PK)
+├── latitude (decimal)
+├── longitude (decimal)
+├── is_online (boolean, default: false)
+├── last_updated (timestamp)
+```
+
+### ⭐ **Review Service**
+```
+reviews
+├── id (UUID, PK)
+├── order_id (UUID, FK → orders.id)
+├── customer_id (UUID, FK → users.id)
+├── restaurant_id (UUID, FK → restaurants.id)
+├── driver_id (UUID, FK → users.id, nullable)
+├── restaurant_rating (integer, 1-5)
+├── driver_rating (integer, 1-5, nullable)
+├── food_quality (integer, 1-5)
+├── delivery_time (integer, 1-5)
+├── restaurant_comment (text)
+├── driver_comment (text, nullable)
+├── is_verified (Boolean, {default: true})
+├── is_visible (Boolean, {default: true})
+├── created_at (timestamp)
+├── updated_at (timestamp)
+
+review_responses
+├── id (UUID, PK)
+├── review_id (UUID, FK → reviews.id)
+├── responder_id (UUID, FK → users.id)
+├── responder_type (enum: restaurant, admin)
+├── response (text)
+├── created_at (timestamp)
+
+review_helful
+├── id (UUID, PK)
+├── review_id (UUID, FK → reviews.id)
+├── user_id (UUID, FK → users.id)
+├── is_helpful (boolean)
+├── created_at (timestamp)
+├── updated_at (timestamp)
+
+review_reports
+├── id (UUID, PK)
+├── review_id (UUID, FK → reviews.id)
+├── reporter_id (UUID, FK → users.id)
+├── reason (enum: spam, inappropriate, fake, offensive, other)
+├── description (text)
+├── status (enum: pending, reviewed, resolved, rejected, {default: pending})
+├── reviewed_by (UUID → users.id (admin))
+├── created_at (timestamp)
+├── updated_at (timestamp)
+```
+
+### 📧 **Notification Service**
+```
+notification_templates
+├── id (UUID, PK)
+├── template_key (string, unique)
+├── template_type (enum: email, sms, push)
+├── subject (string, nullable)
+├── content (text)
+├── variables (JSON)
+├── is_active (boolean, default: true)
+├── created_at (timestamp)
+├── updated_at (timestamp)
+
+notification_queue
+├── id (UUID, PK)
+├── user_id (UUID, FK → users.id)
+├── template_key (string)
+├── notification_type (enum: email, sms, push)
+├── recipient (string)
+├── subject (string, nullable)
+├── content (text)
+├── variables (JSON)
+├── status (enum: pending, processing, sent, failed, retry)
+├── scheduled_at (timestamp)
+├── sent_at (timestamp, nullable)
+├── retry_count (integer, default: 0)
+├── error_message (text, nullable)
+├── created_at (timestamp)
+├── updated_at (timestamp)
+
+notification_logs
+├── id (UUID, PK)
+├── queue_id (UUID, FK → notification_queue.id)
+├── status (string)
+├── response (JSON)
+├── timestamp (timestamp)
+```
+
+## 🏗️ **Microservice Architecture**
+
+```
+┌─────────────────────────────────────────────────────────────────┐
+│                    API Gateway (Port 3000)                      │
+│                     Load Balancer & Routing                     │
+└─────────────────────────────────────────────────────────────────┘
+                                   │
+                ┌──────────────────┼──────────────────┐
+                │                  │                  │
+        ┌───────▼───────┐  ┌───────▼───────┐  ┌───────▼───────┐
+        │ User Service   │  │Restaurant Svc  │  │ Order Service │
+        │   (3001)      │  │    (3002)     │  │    (3003)     │
+        │   Auth & Profile│  │Menu & Hours   │  │ Cart & Orders │
+        └───────────────┘  └───────────────┘  └───────────────┘
+                │                  │                  │
+        ┌───────▼───────┐  ┌───────▼───────┐  ┌───────▼───────┐
+        │Payment Service │  │Delivery Svc   │  │Review Service │
+        │   (3004)      │  │    (3005)     │  │    (3006)     │
+        │Stripe & Refunds│  │Driver & Track │  │Rating & Reviews│
+        └───────────────┘  └───────────────┘  └───────────────┘
+                │                  
+        ┌───────▼───────┐ 
+        │Notification        │ 
+        │Service (3007)      │ 
+        │Email & RabbitMQ    │
+        └───────────────┘
+
+┌─────────────────────────────────────────────────────────────────┐
+│                    Shared Infrastructure                        │
+│  ┌─────────────┐ ┌─────────────┐ ┌─────────────┐ ┌────────────┐ │
+│  │ PostgreSQL  │ │  RabbitMQ   │ │    Redis    │ │   Stripe   │ │
+│  │  Database   │ │   Queue     │ │   Cache     │ │  Payments  │ │
+│  └─────────────┘ └─────────────┘ └─────────────┘ └────────────┘ │
+└─────────────────────────────────────────────────────────────────┘
+```
+
+## 🔄 **Key API Flows**
+
+### 📱 **Order Creation Flow:**
+1. `POST /api/orders` → Order Service
+2. Order Service → Restaurant Service (validate menu)
+3. Order Service → Payment Service (create payment intent)
+4. Payment Service → Stripe API
+5. Order Service → Notification Service (RabbitMQ)
+6. Notification Service → Email confirmation
+
+### 💸 **Refund Process Flow:**
+1. `POST /api/refunds` → Payment Service
+2. Payment Service → Stripe (create refund)
+3. Payment Service → Order Service (update status)
+4. Payment Service → Notification Service (refund notification)
+5. Payment Service → Analytics (refund metrics)
+
+### 🚚 **Delivery Tracking Flow:**
+1. Driver accepts order → Delivery Service
+2. Real-time location updates → Delivery Service
+3. Status updates → Order Service
+4. Customer notifications → Notification Service
+5. Delivery completion → Payment Service (driver earnings)
+
+## 💳 **Payment Integration Scenarios**
+
+### 🎯 **Stripe Integration Points:**
+- **Order Payments** with tips
+- **Subscription Billing** for premium features
+- **Refund Processing** (partial/full)
+- **Driver Payouts** via Stripe Connect
+- **Restaurant Settlements** with commission deduction
+- **Failed Payment Retry** logic
+
+### 🔄 **Refund Types:**
+- **Customer Initiated** - Quality issues, wrong order
+- **Restaurant Cancelled** - Out of stock, closing early  
+- **Driver Unavailable** - No driver found
+- **System Error** - Technical failures
+- **Partial Refunds** - Missing items
+
+## 📧 **Email Notification Workflows**
+
+### 📬 **RabbitMQ Queue Structure:**
+```
+email.order.confirmation    → Order placed successfully
+email.order.cancelled      → Order cancellation
+email.payment.received     → Payment confirmation
+email.refund.processed     → Refund completion
+email.delivery.updates     → Delivery status changes
+email.loyalty.rewards      → Points earned/redeemed
+email.subscription.billing → Subscription renewals
+email.promotional          → Marketing campaigns
+```
+
+### ✉️ **Email Types:**
+- **Transactional** - Orders, payments, refunds
+- **Operational** - Delivery updates, restaurant closures
+- **Marketing** - Promotions, loyalty rewards
+- **Administrative** - Account changes, security alerts
+
+## 🧪 **Testing Strategy**
+
+### 📊 **Service-Level Tests:**
+- **Unit Tests** - Business logic, validations
+- **Integration Tests** - Database operations
+- **API Tests** - Endpoint functionality
+- **Contract Tests** - Inter-service communication
+
+### 🔄 **End-to-End Scenarios:**
+- Complete order journey (order → payment → delivery)
+- Refund processing workflows
+- Driver assignment and tracking
+- Email notification delivery

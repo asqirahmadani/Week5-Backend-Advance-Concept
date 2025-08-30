@@ -1,0 +1,28 @@
+{
+  "name": "payment-service",
+  "version": "1.0.50",
+  "scripts": {
+    "dev": "bun run --watch src/index.ts",
+    "db:generate": "drizzle-kit generate",
+    "db:migrate": "bun src/db/migrate.ts",
+    "test": "bun test",
+    "test:watch": "bun test --watch",
+    "test:coverage": "bun test --coverage",
+    "test:service": "bun test tests/services",
+    "test:routes": "bun test tests/routes",
+    "test:payment": "bun test payment.service.test.ts",
+    "test:refund": "bun test refund.service.test.ts",
+    "test:stripe": "bun test stripe.service.test.ts"
+  },
+  "dependencies": {
+    "@elysiajs/cors": "^1.3.3",
+    "@elysiajs/swagger": "^1.3.1",
+    "elysia": "latest",
+    "stripe": "^18.4.0",
+    "zod": "^4.0.17"
+  },
+  "devDependencies": {
+    "bun-types": "latest"
+  },
+  "module": "src/index.js"
+}
